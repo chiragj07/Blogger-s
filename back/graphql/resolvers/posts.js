@@ -7,7 +7,6 @@ module.exports = {
         async getPosts() {
             try {
                 const posts = await Post.find().sort({createdAt:-1});
-                console.log(posts);
                 return posts;
             } catch (err) {
                 console.log(err.messsage)
@@ -15,8 +14,7 @@ module.exports = {
         },
         async getPost(_, {postId}) {
             try {
-                const post = await Post.findById(postId);
-                console.log(post)
+                const post = await Post.findById(postId)
                 if (post) {
                     return post
                 } else {
@@ -57,6 +55,32 @@ module.exports = {
 
             }catch(err){
                 throw new Error(err)
+            }
+        }
+        ,
+        async createLike(_,{postId},context){
+            const {username} = checkAuth(context);
+            try{
+                const post = await Post.findById(postId);
+                if(post){
+                    if(post.likes.find(like => like.username === username)){
+                       post.likes= post.likes.filter(like => like.username !== username);
+                    }
+                    else{
+                        post.likes.push({
+                            username,
+                            createdAt: new Date().toISOString()
+                        })
+                    }
+
+                    await post.save();
+                    return post;
+                }else{
+                    throw new Error("post not found");
+                }
+
+            }catch(err){
+                throw new Error("error occured")
             }
         }
     }
